@@ -1,4 +1,4 @@
-# ClipMaker
+# ClipShortsMaker
 
 Aplicação web estática que usa inteligência artificial para identificar os momentos mais interessantes de um vídeo e gerar um clip de 30 a 60 segundos pronto para compartilhar.
 
@@ -51,7 +51,7 @@ Também é possível usar a extensão Live Server do VS Code para abrir o `index
 
 1. O usuário informa a chave do Gemini no navegador.
 2. O Cloudinary recebe o vídeo e retorna seu `public_id`.
-3. O ClipMaker aguarda a transcrição disponibilizada pelo Cloudinary.
+3. O ClipShortsMaker aguarda a transcrição disponibilizada pelo Cloudinary.
 4. A transcrição é enviada ao Gemini, que retorna os timestamps no formato `so_inicio,eo_fim`.
 5. O projeto monta uma URL de transformação do Cloudinary para reproduzir apenas o trecho selecionado.
 6. O resultado é exibido com opções de download e compartilhamento.

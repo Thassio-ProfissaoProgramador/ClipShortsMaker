@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClipMaker - Crie Clips Virais com IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .card-glass {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+
+        .soft-shadow {
+            box-shadow: 0 4px 6px rgba(15, 23, 42, 0.07), 0 10px 15px rgba(15, 23, 42, 0.05);
+        }
+
+        .soft-shadow-lg {
+            box-shadow: 0 20px 25px rgba(15, 23, 42, 0.1), 0 25px 50px rgba(15, 23, 42, 0.05);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.02);
+            box-shadow: 0 20px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .input-field {
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(203, 213, 225, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            background: rgba(255, 255, 255, 0.6);
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .upload-zone {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-zone:hover {
+            background: rgba(59, 130, 246, 0.05);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+
+        .video-container {
+            aspect-ratio: 16 / 9;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-loading {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .status-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(59, 130, 246, 0.2);
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 1024px) {
+            .feature-grid {
+                grid-template-columns: 2fr 1fr 1fr;
+            }
+        }
+
+        .feature-card {
+            padding: 1.5rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 20px 25px rgba(15, 23, 42, 0.15);
+        }
+
+        .fade-in {
+            opacity: 0;
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="glass-nav fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16 sm:h-20">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-lg">CM</span>
+                    </div>
+                    <div>
+                        <h1 class="gradient-text font-bold text-xl sm:text-2xl">ClipMaker</h1>
+                        <p class="text-xs text-slate-500 hidden sm:block">Clips virais com IA</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-24 sm:pt-28 pb-16">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            <!-- Hero Section -->
+            <section class="mb-20">
+                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    <div class="fade-in">
+                        <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 tracking-tight mb-6 leading-tight">
+                            Transforme vídeos em <span class="gradient-text">clips virais</span> instantaneamente
+                        </h2>
+                        <p class="text-lg text-slate-600 mb-8 leading-relaxed">
+                            Carregue seu vídeo, deixe a IA analisar e extraia os momentos mais emocionantes automaticamente. Pronto para redes sociais em segundos.
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <button id="cta-button" class="btn-primary px-8 py-4 text-white font-semibold rounded-lg soft-shadow">
+                                Começar Agora
+                            </button>
+                            <button class="px-8 py-4 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-all duration-300">
+                                Ver Demo
+                            </button>
+                        </div>
+                    </div>
+                    <div class="fade-in" style="animation-delay: 0.1s">
+                        <div class="card-glass soft-shadow-lg p-8 rounded-xl">
+                            <div class="video-container bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center">
+                                <svg class="w-16 h-16 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Upload Section -->
+            <section class="mb-20">
+                <h3 class="text-3xl font-bold text-slate-900 tracking-tight mb-8">Comece aqui</h3>
+                <div class="card-glass soft-shadow p-8 sm:p-12 rounded-2xl">
+                    <div class="space-y-8">
+                        <!-- API Key Input -->
+                        <div class="space-y-3">
+                            <label for="apiKey" class="block text-sm font-semibold text-slate-900">
+                                Chave de API Gemini
+                            </label>
+                            <div class="relative">
+                                <input 
+                                    id="apiKey" 
+                                    type="password" 
+                                    placeholder="Cole sua chave de API do Google Gemini aqui"
+                                    class="input-field w-full px-4 py-3 rounded-lg focus:outline-none text-slate-900 placeholder-slate-400"
+                                />
+                                <button class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors" id="toggle-api">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <p class="text-xs text-slate-500">
+                                Sua chave não é armazenada. Obtém em <a href="https://aistudio.google.com/app/apikeys" target="_blank" class="text-blue-500 hover:text-blue-600 underline">Google AI Studio</a>
+                            </p>
+                        </div>
+
+                        <!-- Upload Zone -->
+                        <div class="space-y-3">
+                            <label class="block text-sm font-semibold text-slate-900">Vídeo</label>
+                            <div 
+                                id="uploadZone"
+                                class="upload-zone card-glass border-2 border-dashed border-slate-300 p-8 sm:p-12 rounded-xl text-center"
+                            >
+                                <svg class="w-16 h-16 mx-auto mb-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                </svg>
+                                <h4 class="text-lg font-semibold text-slate-900 mb-2">Clique ou arraste seu vídeo</h4>
+                                <p class="text-sm text-slate-600">Suporta MP4, WebM e outros formatos de vídeo</p>
+                                <button 
+                                    id="uploadWidget" 
+                                    class="mt-6 px-6 py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors"
+                                >
+                                    Selecionar arquivo
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Status -->
+                        <div id="statusContainer" class="hidden">
+                            <div id="status" class="status-badge status-loading">
+                                <span class="spinner"></span>
+                                <span id="statusText">Processando vídeo...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Video Result Section -->
+            <section id="resultSection" class="hidden">
+                <h3 class="text-3xl font-bold text-slate-900 tracking-tight mb-8">Seu clip viral</h3>
+                <div class="card-glass soft-shadow p-8 rounded-2xl space-y-6">
+                    <div class="video-container bg-black rounded-xl overflow-hidden soft-shadow-lg">
+                        <video 
+                            id="video" 
+                            src="" 
+                            controls 
+                            class="w-full h-full"
+                        ></video>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button 
+                            id="downloadBtn"
+                            class="btn-primary px-6 py-3 text-white font-semibold rounded-lg soft-shadow flex items-center justify-center gap-2"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            Baixar clip
+                        </button>
+                        <button 
+                            id="shareBtn"
+                            class="px-6 py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-all duration-300 flex items-center justify-center gap-2"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C9.589 12.938 10 12.502 10 12c0-.502-.411-.938-1.316-1.342m0 2.684a3 3 0 110-2.684m9.108-6.342h-.015a6.981 6.981 0 00-5.804 3.022m15.09 0a6.981 6.981 0 00-5.804-3.022m0 0a6.982 6.982 0 00-5.804 3.022m15.09 0a6.981 6.981 0 00-5.804-3.022"></path>
+                            </svg>
+                            Compartilhar
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Features Section -->
+            <section class="mt-24 pt-16 border-t border-slate-200">
+                <h3 class="text-3xl font-bold text-slate-900 tracking-tight mb-4">Por que ClipMaker?</h3>
+                <p class="text-lg text-slate-600 mb-12">Tecnologia de ponta para criar conteúdo que converte</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-card card-glass soft-shadow">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <h4 class="text-lg font-bold text-slate-900 mb-2">Análise Inteligente</h4>
+                        <p class="text-sm text-slate-600">IA detecta os momentos mais emocionantes e inesperados do seu vídeo</p>
+                    </div>
+
+                    <div class="feature-card card-glass soft-shadow">
+                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h4 class="text-lg font-bold text-slate-900 mb-2">Instantâneo</h4>
+                        <p class="text-sm text-slate-600">Receba seu clip editado e pronto em segundos</p>
+                    </div>
+
+                    <div class="feature-card card-glass soft-shadow">
+                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h4 class="text-lg font-bold text-slate-900 mb-2">Pronto para Redes</h4>
+                        <p class="text-sm text-slate-600">Clips otimizados para TikTok, Instagram Reels e YouTube Shorts</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="https://upload-widget.cloudinary.com/latest/global/all.js" type="text/javascript"></script>
+
+    <script type="text/javascript">
+        // DOM Elements
+        const el = {
+            apiKey: document.getElementById('apiKey'),
+            uploadWidget: document.getElementById('uploadWidget'),
+            uploadZone: document.getElementById('uploadZone'),
+            video: document.getElementById('video'),
+            status: document.getElementById('status'),
+            statusContainer: document.getElementById('statusContainer'),
+            statusText: document.getElementById('statusText'),
+            resultSection: document.getElementById('resultSection'),
+            ctaButton: document.getElementById('cta-button'),
+            toggleApi: document.getElementById('toggle-api'),
+            downloadBtn: document.getElementById('downloadBtn'),
+            shareBtn: document.getElementById('shareBtn')
+        };
+
+        // Configuration
+        const config = {
+            cloudName: 'dfys23s2t',
+            uploadPreset: 'upload_nlw'
+        };
+
+        // Application State
+        const app = {
+            public_id: '',
+            transcriptionURL: '',
+            viralMomentURL: '',
+
+            // Show status message
+            setStatus: (message, type = 'loading') => {
+                el.statusContainer.classList.remove('hidden');
+                el.statusText.textContent = message;
+                el.status.className = `status-badge status-${type}`;
+                
+                if (type === 'loading') {
+                    el.status.innerHTML = `<span class="spinner"></span><span id="statusText">${message}</span>`;
+                } else if (type === 'success') {
+                    el.status.innerHTML = `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg><span>${message}</span>`;
+                } else if (type === 'error') {
+                    el.status.innerHTML = `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg><span>${message}</span>`;
+                }
+            },
+
+            // Wait for transcription to be available
+            waitForTranscription: async () => {
+                const maxAttempts = 30;
+                const delayMs = 2000;
+                
+                for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                    const transcriptURL = `https://res.cloudinary.com/${config.cloudName}/raw/upload/v${Date.now()}/${app.public_id}.transcript`;
+                    
+                    try {
+                        const response = await fetch(transcriptURL);
+                        if (response.ok) {
+                            app.transcriptionURL = transcriptURL;
+                            console.log('✓ Transcrição encontrada:', transcriptURL);
+                            return transcriptURL;
+                        }
+                    } catch (error) {
+                        console.log(`Tentativa ${attempt + 1}/${maxAttempts}: Aguardando transcrição...`);
+                    }
+                    
+                    if (attempt < maxAttempts - 1) {
+                        await new Promise(resolve => setTimeout(resolve, delayMs));
+                    }
+                }
+                
+                throw new Error('Transcrição não disponível após 30 tentativas');
+            },
+
+            // Get transcription content
+            getTranscription: async () => {
+                const response = await fetch(app.transcriptionURL);
+                return response.text();
+            },
+
+            // Extract viral moment using Gemini AI
+            getViralMoment: async () => {
+                const transcription = await app.getTranscription();
+                const model = 'gemini-2.0-flash';
+                const cleanApiKey = el.apiKey.value.trim();
+                //const endpointGemini = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+                const endpointGemini = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanApiKey}`;
+                const prompt = `Role: You are a professional video editor specializing in viral content. 
+Task: Analyze the transcription below and identify the most engaging, funny, or surprising segment. 
+Constraints:
+Duration: Minimum 30 seconds, Maximum 60 seconds.
+Format: Return ONLY the start and end string for Cloudinary. Format: so_<start_seconds>,eo_<end_seconds>
+Examples: "so_10,eo_20" or "so_12.5,eo_45.2"
+CRITICAL: Do not use markdown, do not use quotes, do not explain. Return ONLY the raw string.
+Transcription: ${transcription}`;
+
+                const headers = {
+                    'x-goog-api-key': el.apiKey.value,
+                    'Content-Type': 'application/json',
+                };
+
+                const response = await fetch(endpointGemini, {
+                    method: 'POST',
+                    headers: headers,
+                   /* body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: prompt
+                            }]
+                        }]
+                    })
+                });*/
+                    body: JSON.stringify({
+                        systemInstruction: {
+                            parts: [{ 
+                                text: "Você é um extrator de timestamps de vídeo. Retorne APENAS a string no formato exato 'so_X,eo_Y'. Nenhuma palavra extra, nenhuma formatação markdown." 
+                            }]                    
+                        },
+                        contents: [{
+                            parts: [{
+                                text: `Encontre o momento mais engajador/engraçado (30 a 60 segundos) nesta transcrição:\n\n${transcription}`
+                            }]
+                        }]
+                    })
+                });
+
+
+                const data = await response.json();
+                if (data.error) {
+                    const errorCode = data.error.code;
+                    const errorMsg = data.error.message;
+    
+                    // Se o erro for 400 (Chave inválida) ou 429 (Cota estourada), lança um erro específico para parar o loop
+                    if (errorCode === 400 || errorCode === 429) {
+                    const fatalError = new Error(`Erro Fatal Gemini: ${errorMsg}`);
+                    fatalError.isFatal = true; // Flag personalizada
+                    throw fatalError;
+                    }
+    
+                    throw new Error(`Erro do Gemini: ${errorMsg}`);
+                }                
+
+
+                if (data.error) {
+                    throw new Error(`Erro do Gemini: ${data.error.message}`);
+                }
+
+                const viralMoment = data.candidates[0].content.parts[0].text.trim();
+                console.log('✓ Momento viral detectado:', viralMoment);
+                return viralMoment;
+            },
+
+            // Retry getting viral moment
+            getViralMomentWithRetry: async () => {
+                const maxAttempts = 3;
+                const delayMs = 3000;
+
+                for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                    try {
+                        return await app.getViralMoment();
+                    } catch (error) {
+                        console.warn(`Tentativa ${attempt + 1}/${maxAttempts}:`, error.message);
+                      
+                        // Se for erro de chave ou cota, desiste imediatamente
+                        if (error.isFatal) throw error;
+                        
+                        if (attempt < maxAttempts - 1) {
+                            await new Promise(resolve => setTimeout(resolve, delayMs));
+                        } else {
+                            throw error;
+                        }
+                    }
+                }
+            }
+        };
+
+        // Cloudinary Widget Setup
+        const myWidget = cloudinary.createUploadWidget(
+            config,
+            async (error, result) => {
+                if (!error && result && result.event === "success") {
+                    app.public_id = result.info.public_id;
+                    
+                    try {
+                        app.setStatus('Aguardando transcrição da IA...', 'loading');
+                        
+                        await app.waitForTranscription();
+                        
+                        app.setStatus('Analisando conteúdo...', 'loading');
+                        
+                        const viralMoment = await app.getViralMomentWithRetry();
+                        
+                        app.viralMomentURL = `https://res.cloudinary.com/${config.cloudName}/video/upload/${viralMoment}/${app.public_id}.mp4`;
+                        
+                        el.video.src = app.viralMomentURL;
+                        el.resultSection.classList.remove('hidden');
+                        
+                        app.setStatus('Clip pronto! 🎬', 'success');
+                        
+                        // Animate video section
+                        gsap.from(el.resultSection, {
+                            duration: 0.6,
+                            opacity: 0,
+                            y: 30,
+                            ease: "power2.out"
+                        });
+                        
+                        // Smooth scroll to video
+                        setTimeout(() => {
+                            el.resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }, 300);
+                        
+                    } catch (error) {
+                        console.error('Erro:', error);
+                        app.setStatus(`Erro: ${error.message}`, 'error');
+                    }
+                }
+            }
+        );
+
+        // Event Listeners
+        
+        // CTA Button
+        el.ctaButton.addEventListener('click', () => {
+            if (!el.apiKey.value) {
+                el.apiKey.focus();
+                el.apiKey.classList.add('border-red-500');
+                app.setStatus('Por favor, insira sua chave de API do Gemini', 'error');
+                return;
+            }
+            myWidget.open();
+        });
+
+        // Upload Zone Click
+        el.uploadZone.addEventListener('click', () => {
+            if (el.apiKey.value) {
+                myWidget.open();
+            }
+        });
+
+        // Upload Widget Button
+        el.uploadWidget.addEventListener('click', () => {
+            if (!el.apiKey.value) {
+                el.apiKey.focus();
+                el.apiKey.classList.add('border-red-500');
+                app.setStatus('Por favor, insira sua chave de API do Gemini', 'error');
+                return;
+            }
+            myWidget.open();
+        });
+
+        // API Key Input - Remove error state on focus
+        el.apiKey.addEventListener('focus', () => {
+            el.apiKey.classList.remove('border-red-500');
+        });
+
+        // Toggle API Key Visibility
+        el.toggleApi.addEventListener('click', () => {
+            const isPassword = el.apiKey.type === 'password';
+            el.apiKey.type = isPassword ? 'text' : 'password';
+        });
+
+        // Download Button
+        el.downloadBtn.addEventListener('click', () => {
+            if (app.viralMomentURL) {
+                const a = document.createElement('a');
+                a.href = app.viralMomentURL;
+                a.download = 'clip-viral.mp4';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+        });
+
+        // Share Button
+        el.shareBtn.addEventListener('click', () => {
+            if (app.viralMomentURL) {
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'ClipMaker',
+                        text: 'Veja este clip viral que criei com ClipMaker!',
+                        url: window.location.href
+                    });
+                } else {
+                    // Fallback: copy to clipboard
+                    navigator.clipboard.writeText(app.viralMomentURL);
+                    alert('Link copiado para a área de transferência!');
+                }
+            }
+        });
+
+        // Animations on load
+        window.addEventListener('load', () => {
+            gsap.from('.fade-in', {
+                duration: 0.8,
+                opacity: 0,
+                y: 30,
+                stagger: 0.1,
+                ease: "power2.out"
+            });
+        });
+
+        // Hover animations for feature cards
+        document.querySelectorAll('.feature-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                gsap.to(card, {
+                    duration: 0.3,
+                    y: -8,
+                    ease: "power2.out"
+                });
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                gsap.to(card, {
+                    duration: 0.3,
+                    y: 0,
+                    ease: "power2.out"
+                });
+            });
+        });
+
+        // Scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    gsap.to(entry.target, {
+                        duration: 0.6,
+                        opacity: 1,
+                        y: 0,
+                        ease: "power2.out"
+                    });
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('section').forEach(section => {
+            gsap.set(section, { opacity: 0, y: 30 });
+            observer.observe(section);
+        });
+    </script>
+</body>
+</html>

@@ -1,6 +1,13 @@
-`Role: You are a professional video editor specializing in viral content. Task: Analyze the transcription below and identify the most engaging, funny, or surprising segment. Constraints:
-Duration: Minimum 30 seconds, Maximum 60 seconds.
-Format: Return ONLY the start and end string for Cloudinary. Format: so_<start_seconds>,eo_<end_seconds>
-Examples: "so_10,eo_20" or "so_12.5,eo_45.2"
-CRITICAL: Do not use markdown, do not use quotes, do not explain. Return ONLY the raw string.
-Transcription: ${transcription}`
+Você é uma pessoa editora de vídeo especializada em conteúdo curto.
+
+Analise a transcrição temporizada abaixo e identifique um trecho interessante, engraçado ou surpreendente que funcione fora do vídeo completo.
+
+Regras:
+- O trecho deve durar entre 30 e 60 segundos.
+- Preserve o contexto necessário para entender o momento.
+- Use apenas timestamps existentes na transcrição.
+- Responda somente com JSON válido neste formato: {"start": 12.5, "end": 48.0}.
+- Não inclua Markdown nem explicações.
+
+Transcrição:
+${transcription}
